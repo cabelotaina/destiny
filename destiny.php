@@ -69,50 +69,53 @@ function create_destiny()
   );
 }
 
-function list_all_destinations(){
-  <?php
+function list_all_destinations($attr){
 
-$cat_args = array(
-    'parent'       => 0,
-    'number'        => 10,
-    'hide_empty'    => false,
-);
+  $cat_args = array(
+      'parent'       => 0,
+      'number'        => 10,
+      'hide_empty'    => false,
+  );
 
-$taxonomies = 'destiny_category';
+  $taxonomies = 'destiny_category';
 
-$main_categories = get_terms($taxonomies,$cat_args);
+  $main_categories = get_terms($taxonomies,$cat_args);
+  $content = "";
+  foreach($main_categories as $cat){
+    $content .= $cat->name . "<br>";
+    $childrens = get_term_children( $cat->term_id, $taxonomies);
+      foreach($childrens as $child){
+        $city = get_term_by('id',$child,$taxonomies);
+        $content .=  $city->name. "<br>";
+        $the_query = new WP_Query(array(
+          'post_type' => 'destiny',
+          'numberposts' => -1,
+          'tax_query' => array(
+            array(
+              'taxonomy' => $taxonomies,
+              'field' => 'id',
+              'terms' => $city->term_id, // Where term_id of Term 1 is "1".
+            )
+          )
+        ));
 
-foreach($main_categories as $cat){
-  echo $cat->name . "<br>";
-  $childrens = get_term_children( $cat->term_id, $taxonomies);
-  foreach($childrens as $child){
-    $city = get_term_by('id',$child,$taxonomies);
-    echo $city->name. "<br>";
-    $the_query = new WP_Query(array(
-      'post_type' => 'destiny',
-      'numberposts' => -1,
-      'tax_query' => array(
-        array(
-          'taxonomy' => $taxonomies,
-          'field' => 'id',
-          'terms' => $city->term_id, // Where term_id of Term 1 is "1".
-        )
-      )
-    ));
+     if ( $the_query->have_posts() ) {
+       $content .=  '<ul>';
+       while ( $the_query->have_posts() ) {
+         $the_query->the_post();
+         $content .= '<li><a href="'.get_permalink().'" >' . get_the_title() . '</a></li>';
+       }
+       $content .= '</ul>';
+       /* Restore original Post Data */
+       wp_reset_postdata();
+     } else {
+      	$content .= __("no posts found","destiny");
+     }
 
-   if ( $the_query->have_posts() ) {
-	echo '<ul>';
-	while ( $the_query->have_posts() ) {
-		$the_query->the_post();
-		echo '<li><a href="'.get_permalink().'" >' . get_the_title() . '</a></li>';
-	}
-	echo '</ul>';
-	/* Restore original Post Data */
-	wp_reset_postdata();
-} else {
-	echo __("no posts found","destiny");
-}
-
+   }
   }
+  return $content;
+
 }
-}
+
+add_shortcode( 'destinations', 'list_all_destinations' );
