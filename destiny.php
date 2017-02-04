@@ -9,8 +9,6 @@
    Author URI: https://github.com/cabelotaina/
  */
 defined('ABSPATH') or die('No script kiddies please!');
-define( 'MAKE_PRESSURE_PATH', plugin_dir_path( __FILE__ ) );
-
 
 add_action('init', 'create_destiny');
 
